@@ -96,24 +96,24 @@ void loop()
     int value = value;
   	if (Wire.write(0x00) == +)
   	{
- 	   value = value 1 + value 2;
- 	   Serialprint(value);
- 	 }
-	  if (Wire.write(0x00) == -)
-	  {
-	    value = value 1 - value 2;
-	    Serialprint(value);
-	  }
-	  if (Wire.write(0x00) == *)
-	  {
-	    value = value 1 * value 2;
-	    Serialprint(value);
-	  }
-	  if (Wire.write(0x00) == /)
-	  {
-	    value = value 1 / value 2;
-	    Serialprint(value);
-	  }
+	  value = value 1 + value 2;
+	  Serialprint(value);
+	}
+	if (Wire.write(0x00) == -)
+	{
+	  value = value 1 - value 2;
+	  Serialprint(value);
+	}
+	if (Wire.write(0x00) == *)
+	{
+	  value = value 1 * value 2;
+	  Serialprint(value);
+	}
+	if (Wire.write(0x00) == /)
+	{
+	  value = value 1 / value 2;
+	  Serialprint(value);
+	}
   }
   /*
   while ()
