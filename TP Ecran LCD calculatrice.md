@@ -63,6 +63,65 @@ Votre calculatrice devra fonctionner selon les étapes suivantes :
 4. Le résultat est calculé et affiché sur l'écran LCD.
 5. Le programme demande à l'utilisateur s'il veut effectuer une nouvelle opération.
 
+Suivi Arduino.
+```cpp
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+void setup()
+{
+  Serial.begin(9600);
+  lcd.begin(16,2);
+  lcd.init();
+  lcd.backlight();
+}
+char symbole;
+char character = value;
+int value1, value2;
+
+void loop()
+{
+  Wire.beginTransmission(0x27);
+  Wire.write(0x00);
+  Wire.endTransmission();
+  Wire.requestFrom(0x27, 16);
+  int value1 = Wire.write(0x00);
+  Serial.print("First Number:");
+  Serial.println(value1);
+  int value2 = Wire.write(0x00);
+  Serial.print("Second Number:");
+  Serial.println(value2);
+  Serial.print("Choose +-*/");
+  for(i = 0, i < value, i++) {
+    int value = value;
+  	if (Wire.write(0x00) == +)
+  	{
+ 	   value = value 1 + value 2;
+ 	   Serialprint(value);
+ 	 }
+	  if (Wire.write(0x00) == -)
+	  {
+	    value = value 1 - value 2;
+	    Serialprint(value);
+	  }
+	  if (Wire.write(0x00) == *)
+	  {
+	    value = value 1 * value 2;
+	    Serialprint(value);
+	  }
+	  if (Wire.write(0x00) == /)
+	  {
+	    value = value 1 / value 2;
+	    Serialprint(value);
+	  }
+  }
+  /*
+  while ()
+  {
+  }*/
+}
+```
+
 Le programme devra gérer les erreurs, comme la division par zéro, et afficher un message d'erreur sur le LCD si cela se produit.
 
 ### Bonus
