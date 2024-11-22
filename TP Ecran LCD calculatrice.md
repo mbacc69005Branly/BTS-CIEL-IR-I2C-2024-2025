@@ -69,7 +69,7 @@ Suivi Arduino.
 ```cpp
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+LiquidCrystal_I2C lcd(0x20, 16, 2);
 void setup()
 {
   Serial.begin(9600);
@@ -77,50 +77,35 @@ void setup()
   lcd.init();
   lcd.backlight();
 }
-char symbole;
-char character = value;
-int value1, value2;
 
 void loop()
 {
-  Wire.beginTransmission(0x27);
-  Wire.write(0x00);
-  Wire.endTransmission();
-  Wire.requestFrom(0x27, 16);
-  int value1 = Wire.write(0x00);
-  Serial.print("First Number:");
-  Serial.println(value1);
-  int value2 = Wire.write(0x00);
-  Serial.print("Second Number:");
-  Serial.println(value2);
-  Serial.print("Choose +-*/");
-  for(i = 0, i < value, i++) {
-    int value = value;
-  	if (Wire.write(0x00) == +)
-  	{
- 	   value = value 1 + value 2;
- 	   Serialprint(value);
- 	 }
-	  if (Wire.write(0x00) == -)
-	  {
-	    value = value 1 - value 2;
-	    Serialprint(value);
-	  }
-	  if (Wire.write(0x00) == *)
-	  {
-	    value = value 1 * value 2;
-	    Serialprint(value);
-	  }
-	  if (Wire.write(0x00) == /)
-	  {
-	    value = value 1 / value 2;
-	    Serialprint(value);
-	  }
-  }
-  /*
-  while ()
+  nb1 = valid("Entrer le premier nombre : ");
+  nb2 = valid("Entrer le second nombre : ");
+  float valid(String s)
   {
-  }*/
+    bool caracInvalid = false,
+    do {
+      lcd.print(s);
+      String entreUtilisateur = " ";
+      if (Serial.available())
+        entreUtilisateur = Serial.readUntil("/n");
+      int i = 0
+        while (i < entreUtilisateur.length() && caracInvalid == false) {
+        int c = entreUtilisateur[i];
+        if ((c < 48 || c > 57) && c != 46)
+          caracInvalid = true;
+        i++;
+      }
+      while(caracInvalid == true);
+      if(entreUtilisateur != " ") {
+        return entreUtilisateur.toFloat();
+      }
+      else {
+        lcd.print("Nombre invalide");
+      }
+    }
+  }
 }
 ```
 
