@@ -26,6 +26,59 @@ Vous emulerez via Tinkercad les éléments suivants :
 - Affichez les données sur l'écran LCD
 - Implémentez une logique pour alterner l'affichage des différentes mesures
 
+```cpp
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd(0x20, 16, 2);
+void setup()
+{
+  Serial.begin(9600);
+  lcd.begin(16,2);
+  lcd.init();
+  lcd.backlight();
+  lcd.print("M");
+}
+String tempData, humidityData;
+pinMode(2, INPUT);
+digitalWrite(2, HIGH);
+pinMode(3, INPUT);
+digitalWrite(3, HIGH);
+pinMode(13, INPUT);
+digitalWrite(13, HIGH);
+
+void loop()
+{
+  Wire.beginTransmission(0x68);
+  Wire.write(0x00);
+  Wire.endTransmission();
+  Wire.requestFrom(0x68, 2);
+  if (Wire.available()) {
+    int tempData = Wire.read() << 8 | Wire.read();
+    Serial.print("Température: ");
+    Serial.println(tempData);
+  }
+  Wire.beginTransmission(0x76);
+  Wire.write(0x00);
+  Wire.endTransmission();
+  Wire.requestFrom(0x76, 2);
+  if (Wire.available()) {
+    int pressureData = Wire.read() << 8 | Wire.read();
+    Serial.print("Pression: ");
+    Serial.println(pressureData);
+  }
+  Wire.beginTransmission(0x27);
+  Wire.write(0x00);
+  Wire.endTransmission();
+  Wire.requestFrom(0x27, 2);
+  if (Wire.available()) {
+    int humidityData = Wire.read() << 8 | Wire.read();
+    Serial.print("Humidité: ");
+    Serial.println(humidityData);
+  }
+  delay(1000);
+}
+```
+
 ### 3. Fonctionnalités avancées
 - Calculez et affichez l'indice de confort thermique en utilisant la température et l'humidité
 
