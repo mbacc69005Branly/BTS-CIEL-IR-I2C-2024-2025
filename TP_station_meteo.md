@@ -62,13 +62,12 @@ Dans votre code Arduino, vous devrez implémenter ces formules en tenant compte 
 ## Objectif
 Stocker les données simulées de la station météo dans une base de données et les afficher sur une interface web.
 
-## 1. Configuration du serveur WAMP
-1. Téléchargez et installez WAMP (Windows, Apache, MySQL, PHP) depuis [le site officiel](https://www.wampserver.com/)
-2. Lancez WAMP et vérifiez que l'icône dans la barre des tâches est verte
-3. Testez l'accès à `http://localhost/` dans votre navigateur
-4. Vérifiez l'accès à phpMyAdmin via `http://localhost/phpmyadmin/`
-   - Login : root
-   - Mot de passe : (laissez vide)
+## 1. Configuration docker
+
+En vous appuyant sur le cours et les TP de docker, construisez un container docker contenant à minima :
+- Apache
+- PHP
+- MySQL
 
 ## 2. Configuration de la base de données
 1. Dans phpMyAdmin, créez une nouvelle base de données nommée `station_meteo`
@@ -141,8 +140,6 @@ Le simulateur génère des données au format JSON :
     }
 }
 ```
-
-### Fichier auto_simulate.php
 
 ## 5. Test du système
 Vous avez plusieurs options pour tester le système :
