@@ -124,7 +124,8 @@ $conn->close();
 ```
 
 ## 4. Installation du simulateur de données
-1. Téléchargez le fichier `simulator.php` fourni et placez-le dans le dossier `station_meteo`
+
+Téléchargez les fichiers `simulator.php` et `auto_simulate.php` fourni et placez-le dans le dossier `station_meteo`
 
 Le simulateur génère des données au format JSON :
 ```json
@@ -141,13 +142,26 @@ Le simulateur génère des données au format JSON :
 }
 ```
 
+### Fichier auto_simulate.php
+
 ## 5. Test du système
-1. Ouvrez un terminal (PowerShell ou cmd) dans le dossier `station_meteo`
-2. Générez une lecture simulée :
-```bash
-php simulator.php
+Vous avez plusieurs options pour tester le système :
+
+### Option 1 : Via le navigateur
+Accédez à l'URL suivante dans votre navigateur :
 ```
-3. Envoyez les données au serveur :
+http://localhost/station_meteo/auto_simulate.php?count=5&delay=2
+```
+- `count` : nombre de mesures à simuler (défaut : 1, max : 100)
+- `delay` : délai en secondes entre chaque mesure (défaut : 0)
+
+### Option 2 : Via curl dans le terminal
+```bash
+curl "http://localhost/station_meteo/auto_simulate.php?count=5&delay=2"
+```
+
+### Option 3 : Ligne de commande PHP
+Si vous préférez utiliser directement PHP en ligne de commande :
 ```bash
 php simulator.php | curl -X POST -H "Content-Type: application/json" -d @- http://localhost/station_meteo/receive_data.php
 ```
