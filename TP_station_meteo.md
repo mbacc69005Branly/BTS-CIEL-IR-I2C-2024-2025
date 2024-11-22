@@ -31,7 +31,6 @@ Vous emulerez sur votre machine en utilisant Visual Studio les éléments suivan
 
 ### 3. Fonctionnalités avancées
 - Calculez et affichez l'indice de confort thermique en utilisant la température et l'humidité
-- Implémentez un mode d'économie d'énergie en fonction de la luminosité ambiante
 
 #### Formule de l'indice de confort thermique (Heat Index)
 
