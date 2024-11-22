@@ -60,40 +60,60 @@ Convertissez le résultat de Fahrenheit en Celsius pour l'affichage final.
 
 Dans votre code Arduino, vous devrez implémenter ces formules en tenant compte des limites de précision des calculs en virgule flottante sur les microcontrôleurs.
 
-## Partie 2 : Connexion WiFi et système de serveur
+## Partie 2 : Enregistrement des données dnas un serveur web
 
 ### Objectif
-Étendre la station météo pour envoyer les données à un serveur via WiFi, les stocker dans une base de données et les afficher sur une interface web.
+Stocker les données de la station météo dans une base de données et les afficher sur une interface web.
 
-### Matériel supplémentaire
-- Module WiFi ESP8266 ou carte Arduino avec WiFi intégré (comme ESP32)
+### 0. Simulation des données de la station météo
 
-### 1. Configuration du module WiFi
-- Installez la bibliothèque appropriée pour votre module WiFi (par exemple, ESP8266WiFi pour ESP8266)
-- Configurez la connexion WiFi dans le code Arduino :
+Télécharger le fichier `simulator.php`. Ce fichier va permettre d'émuler l'envoie des données de notre station météo vers le serveur WAMP.
 
-### 2. Envoi des données au serveur
-- Utilisez la bibliothèque HTTPClient pour envoyer des requêtes HTTP
-- Créez une fonction pour envoyer les données :
-  ```cpp
-  void sendDataToServer(float temperature, float humidity, float pressure, float lux, float heatIndex) {
-    HTTPClient http;
-    String url = "http://votre-serveur.com/api/data";
-    String payload = "temp=" + String(temperature) + "&humidity=" + String(humidity) + "&pressure=" + String(pressure) + "&lux=" + String(lux) + "&heatIndex=" + String(heatIndex);
-    
-    http.begin(client, url);
-    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-    int httpCode = http.POST(payload);
-    
-    if (httpCode > 0) {
-      String response = http.getString();
-      Serial.println(response);
+#### Format des données
+
+La station météo envoie des données au format JSON avec la structure suivante :
+
+```json
+{
+    "deviceId": "STATION001",
+    "timestamp": 1637589632,
+    "data": {
+        "temperature": 22.45,
+        "humidity": 48.32,
+        "pressure": 1012.25,
+        "lux": 487.65,
+        "heatIndex": 23.12
     }
-    http.end();
-  }
-  ```
+}
+```
 
-### 3. Configuration du serveur WAMP
+#### Description des champs
+- `deviceId`: Identifiant unique de la station météo
+- `timestamp`: Timestamp Unix de la mesure
+- `data`: Objet contenant les mesures
+  - `temperature`: Température en °C
+  - `humidity`: Humidité relative en %
+  - `pressure`: Pression atmosphérique en hPa
+  - `lux`: Luminosité en lux
+  - `heatIndex`: Indice de chaleur ressenti en °C
+
+#### Simulation des données
+
+Pour simuler l'envoi de données depuis la station météo, vous pouvez utiliser le script `simulator.php` de deux façons :
+
+1. En ligne de commande :
+```bash
+php simulator.php
+```
+
+2. Via une requête HTTP vers votre serveur :
+```bash
+curl -X POST -H "Content-Type: application/json" \
+     -d "$(php simulator.php)" \
+     http://localhost/api/weather-data
+```
+
+### 1. Configuration du serveur WAMP
 - Téléchargez et installez WAMP (Windows, Apache, MySQL, PHP) depuis le site officiel
 - Lancez WAMP et assurez-vous que tous les services (Apache, MySQL) sont en cours d'exécution
 - Créez un nouveau fichier PHP dans le répertoire `www` de WAMP (généralement `C:\wamp64\www\`) nommé `receive_data.php` :
@@ -120,7 +140,7 @@ $lux = $_POST['lux'] ?? null;
 $heatIndex = $_POST['heatIndex'] ?? null;
 
 // Préparation et exécution de la requête SQL
-$sql = ""; // A completer avec la requete INSERT INTO correspondant à votre base de données après la partie 4. Configuration de la base de données MySQL
+$sql = ""; // A completer avec la requete INSERT INTO correspondant à votre base de données après la partie 2. Configuration de la base de données MySQL
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("ddddd", $temperature, $humidity, $pressure, $lux, $heatIndex);
 
@@ -135,7 +155,7 @@ $conn->close();
 ?>
 ```
 
-### 4. Configuration de la base de données MySQL
+### 2. Configuration de la base de données MySQL
 - Ouvrez phpMyAdmin depuis le menu WAMP (généralement accessible via http://localhost/phpmyadmin/)
 - Créez une nouvelle base de données nommée `station_meteo`
 - Dans cette base de données, créez une table nommée `mesures` et choisissez quels doivent en être les champs. Ajoutez ci-dessous la requête permettant de créer la table `mesure`
@@ -146,7 +166,28 @@ MON CODE ICI
 
 - Assurez-vous que l'utilisateur 'root' a les permissions nécessaires pour accéder à cette base de données
 
-### 5. Création d'une interface web simple
+### 3. Envoi des données au serveur
+- Utilisez la bibliothèque HTTPClient pour envoyer des requêtes HTTP
+- Créez une fonction pour envoyer les données :
+  ```cpp
+  void sendDataToServer(float temperature, float humidity, float pressure, float lux, float heatIndex) {
+    HTTPClient http;
+    String url = "http://votre-serveur.com/api/data";
+    String payload = "temp=" + String(temperature) + "&humidity=" + String(humidity) + "&pressure=" + String(pressure) + "&lux=" + String(lux) + "&heatIndex=" + String(heatIndex);
+    
+    http.begin(client, url);
+    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+    int httpCode = http.POST(payload);
+    
+    if (httpCode > 0) {
+      String response = http.getString();
+      Serial.println(response);
+    }
+    http.end();
+  }
+  ```
+
+### 4. Création d'une interface web simple
 - Créez un nouveau fichier `index.php` dans le même répertoire que `receive_data.php` :
 
 ```php
