@@ -65,7 +65,6 @@ Votre calculatrice devra fonctionner selon les étapes suivantes :
 4. Le résultat est calculé et affiché sur l'écran LCD.
 5. Le programme demande à l'utilisateur s'il veut effectuer une nouvelle opération.
 
-Suivi Arduino.
 ```cpp
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
@@ -78,6 +77,7 @@ void setup()
   lcd.backlight();
   lcd.print("M");
   delay(5000);
+  lcd.clear();
 }
 String nb1, nb2;
 float valid(String s)
@@ -108,10 +108,42 @@ float valid(String s)
   }
   while(caracInvalid == true);
 }
+/*float operation(String m)
+{
+  String Operation = "";
+  bool symbolInvalid = false;
+  do
+  {
+    lcd.print(m);
+    if (Serial.available())
+      Operation = Serial.readStringUntil('\n');
+    int i = 0;
+    while (i < Operation.length() && caracInvalid == false)
+    {
+      int m = entreOperation[i]
+      if (m < 5 || m > 7) && c != 4)
+        symbolInvalid = true;
+      i++;
+      if(entreOperation != "")
+      {
+        return entreOperation.toFloat();
+      }
+      else
+      {
+        lcd.print("Operation invalide");
+      }
+    }
+  }
+  while(symbolInvalid == true);
+}*/
 void loop()
 {
   nb1 = valid("Number 1: ");
+  //delay(5000);
+  lcd.clear();
   nb2 = valid("Number 2: ");
+  //delay(5000);
+  lcd.clear();
 }
 ```
 
