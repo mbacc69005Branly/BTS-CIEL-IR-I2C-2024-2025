@@ -76,36 +76,42 @@ void setup()
   lcd.begin(16,2);
   lcd.init();
   lcd.backlight();
+  lcd.print("M");
+  delay(5000);
 }
-
-void loop()
+String nb1, nb2;
+float valid(String s)
 {
-  nb1 = valid("Entrer le premier nombre : ");
-  nb2 = valid("Entrer le second nombre : ");
-  float valid(String s)
+  String entreUtilisateur = "";
+  bool caracInvalid = false;
+  do
   {
-    bool caracInvalid = false,
-    do {
-      lcd.print(s);
-      String entreUtilisateur = " ";
-      if (Serial.available())
-        entreUtilisateur = Serial.readUntil("/n");
-      int i = 0
-        while (i < entreUtilisateur.length() && caracInvalid == false) {
-        int c = entreUtilisateur[i];
-        if ((c < 48 || c > 57) && c != 46)
-          caracInvalid = true;
-        i++;
-      }
-      while(caracInvalid == true);
-      if(entreUtilisateur != " ") {
+    lcd.print(s);
+    if (Serial.available())
+      entreUtilisateur = Serial.readStringUntil('\n');
+    int i = 0;
+    while (i < entreUtilisateur.length() && caracInvalid == false)
+    {
+      int c = entreUtilisateur[i];
+      if ((c < 48 || c > 57) && c != 46)
+        caracInvalid = true;
+      i++;
+      if(entreUtilisateur != "")
+      {
         return entreUtilisateur.toFloat();
       }
-      else {
+      else
+      {
         lcd.print("Nombre invalide");
       }
     }
   }
+  while(caracInvalid == true);
+}
+void loop()
+{
+  nb1 = valid("Number 1: ");
+  nb2 = valid("Number 2: ");
 }
 ```
 
