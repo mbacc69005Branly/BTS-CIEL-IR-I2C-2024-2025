@@ -4,7 +4,7 @@
 Créer une station météo simple utilisant plusieurs capteurs I2C pour mesurer la température, l'humidité et la pression atmosphérique. Les données seront affichées sur un écran LCD I2C.
 
 ## Matériel nécessaire
-Vous emulerez sur votre machine en utilisant Visual Studio les éléments suivants :
+Vous emulerez via Tinkercad les éléments suivants :
 - 1 carte Arduino (Uno R3)
 - 1 capteur d'humidité Micro:bit
 - 1 capteur de température dans la catégorie "Autres composants"
@@ -18,9 +18,6 @@ Vous emulerez sur votre machine en utilisant Visual Studio les éléments suivan
 
 ### 1. Configuration de l'environnement
 - Installez les bibliothèques nécessaires :
-  - Wire (pour I2C)
-  - Adafruit_BME280
-  - Adafruit_TSL2561
   - LiquidCrystal_I2C
 
 ### 2. Programmation
@@ -31,7 +28,6 @@ Vous emulerez sur votre machine en utilisant Visual Studio les éléments suivan
 
 ### 3. Fonctionnalités avancées
 - Calculez et affichez l'indice de confort thermique en utilisant la température et l'humidité
-- Implémentez un mode d'économie d'énergie en fonction de la luminosité ambiante
 
 #### Formule de l'indice de confort thermique (Heat Index)
 
@@ -61,50 +57,34 @@ Convertissez le résultat de Fahrenheit en Celsius pour l'affichage final.
 
 Dans votre code Arduino, vous devrez implémenter ces formules en tenant compte des limites de précision des calculs en virgule flottante sur les microcontrôleurs.
 
-## Partie 2 : Connexion WiFi et système de serveur
+# Partie 2 : Enregistrement et visualisation des données
 
-### Objectif
-Étendre la station météo pour envoyer les données à un serveur via WiFi, les stocker dans une base de données et les afficher sur une interface web.
+## Objectif
+Stocker les données simulées de la station météo dans une base de données et les afficher sur une interface web.
 
-### Matériel supplémentaire
-- Module WiFi ESP8266 ou carte Arduino avec WiFi intégré (comme ESP32)
+## 1. Configuration docker
 
-### 1. Configuration du module WiFi
-- Installez la bibliothèque appropriée pour votre module WiFi (par exemple, ESP8266WiFi pour ESP8266)
-- Configurez la connexion WiFi dans le code Arduino :
+En vous appuyant sur le cours et les TP de docker, construisez un container docker contenant à minima :
+- Apache
+- PHP
+- MySQL
 
-### 2. Envoi des données au serveur
-- Utilisez la bibliothèque HTTPClient pour envoyer des requêtes HTTP
-- Créez une fonction pour envoyer les données :
-  ```cpp
-  void sendDataToServer(float temperature, float humidity, float pressure, float lux, float heatIndex) {
-    HTTPClient http;
-    String url = "http://votre-serveur.com/api/data";
-    String payload = "temp=" + String(temperature) + "&humidity=" + String(humidity) + "&pressure=" + String(pressure) + "&lux=" + String(lux) + "&heatIndex=" + String(heatIndex);
-    
-    http.begin(client, url);
-    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-    int httpCode = http.POST(payload);
-    
-    if (httpCode > 0) {
-      String response = http.getString();
-      Serial.println(response);
-    }
-    http.end();
-  }
-  ```
+## 2. Configuration de la base de données
+1. Dans phpMyAdmin, créez une nouvelle base de données nommée `station_meteo`
+2. Créez la table `mesures` avec la requête SQL qui correspond à ce Modlèe Physique de données :
 
-### 3. Configuration du serveur WAMP
-- Téléchargez et installez WAMP (Windows, Apache, MySQL, PHP) depuis le site officiel
-- Lancez WAMP et assurez-vous que tous les services (Apache, MySQL) sont en cours d'exécution
-- Créez un nouveau fichier PHP dans le répertoire `www` de WAMP (généralement `C:\wamp64\www\`) nommé `receive_data.php` :
+![image](https://github.com/user-attachments/assets/ba59a1b8-7756-4915-aa2e-6b715772d00e)
+
+## 3. Installation du système de réception des données
+1. Dans le répertoire `C:\wamp64\www\`, créez un dossier `station_meteo`
+2. Créez le fichier `receive_data.php` dans ce dossier :
 
 ```php
 <?php
 // Connexion à la base de données
 $servername = "localhost";
 $username = "root";
-$password = ""; // Laissez vide par défaut pour WAMP
+$password = "";
 $dbname = "station_meteo";
 
 $conn = new mysqli($servername, $username, $password, $dbname);
@@ -113,22 +93,28 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Récupération des données envoyées par l'Arduino
-$temperature = $_POST['temp'] ?? null;
-$humidity = $_POST['humidity'] ?? null;
-$pressure = $_POST['pressure'] ?? null;
-$lux = $_POST['lux'] ?? null;
-$heatIndex = $_POST['heatIndex'] ?? null;
+// Récupération du JSON envoyé
+$json_data = file_get_contents('php://input');
+$data = json_decode($json_data, true);
+
+// Extraction des données
+$device_id = $data['deviceId'];
+$timestamp = date('Y-m-d H:i:s', $data['timestamp']);
+$temperature = $data['data']['temperature'];
+$humidity = $data['data']['humidity'];
+$pressure = $data['data']['pressure'];
+$lux = $data['data']['lux'];
+$heat_index = $data['data']['heatIndex'];
 
 // Préparation et exécution de la requête SQL
-$sql = ""; // A completer avec la requete INSERT INTO correspondant à votre base de données après la partie 4. Configuration de la base de données MySQL
+$sql = "INSERT INTO mesures (device_id, timestamp, temperature, humidity, pressure, lux, heat_index) VALUES (?, ?, ?, ?, ?, ?, ?)";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("ddddd", $temperature, $humidity, $pressure, $lux, $heatIndex);
+$stmt->bind_param("ssddddd", $device_id, $timestamp, $temperature, $humidity, $pressure, $lux, $heat_index);
 
 if ($stmt->execute()) {
-    echo "Données enregistrées avec succès";
+    echo json_encode(['status' => 'success', 'message' => 'Données enregistrées avec succès']);
 } else {
-    echo "Erreur: " . $stmt->error;
+    echo json_encode(['status' => 'error', 'message' => $stmt->error]);
 }
 
 $stmt->close();
@@ -136,19 +122,51 @@ $conn->close();
 ?>
 ```
 
-### 4. Configuration de la base de données MySQL
-- Ouvrez phpMyAdmin depuis le menu WAMP (généralement accessible via http://localhost/phpmyadmin/)
-- Créez une nouvelle base de données nommée `station_meteo`
-- Dans cette base de données, créez une table nommée `mesures` et choisissez quels doivent en être les champs. Ajoutez ci-dessous la requête permettant de créer la table `mesure`
+## 4. Installation du simulateur de données
 
-```sql
-MON CODE ICI
+Téléchargez les fichiers `simulator.php` et `auto_simulate.php` fourni et placez-le dans le dossier `station_meteo`
+
+Le simulateur génère des données au format JSON :
+```json
+{
+    "deviceId": "STATION001",
+    "timestamp": 1637589632,
+    "data": {
+        "temperature": 22.45,
+        "humidity": 48.32,
+        "pressure": 1012.25,
+        "lux": 487.65,
+        "heatIndex": 23.12
+    }
+}
 ```
 
-- Assurez-vous que l'utilisateur 'root' a les permissions nécessaires pour accéder à cette base de données
+## 5. Test du système
+Vous avez plusieurs options pour tester le système :
 
-### 5. Création d'une interface web simple
-- Créez un nouveau fichier `index.php` dans le même répertoire que `receive_data.php` :
+### Option 1 : Via le navigateur
+Accédez à l'URL suivante dans votre navigateur :
+```
+http://localhost/station_meteo/auto_simulate.php?count=5&delay=2
+```
+- `count` : nombre de mesures à simuler (défaut : 1, max : 100)
+- `delay` : délai en secondes entre chaque mesure (défaut : 0)
+
+### Option 2 : Via curl dans le terminal
+```bash
+curl "http://localhost/station_meteo/auto_simulate.php?count=5&delay=2"
+```
+
+### Option 3 : Ligne de commande PHP
+Si vous préférez utiliser directement PHP en ligne de commande :
+```bash
+php simulator.php | curl -X POST -H "Content-Type: application/json" -d @- http://localhost/station_meteo/receive_data.php
+```
+
+Vous pouvez vérifier dans phpMyAdmin que les données sont bien enregistrées dans la table `mesures`.
+
+## 6. Création de l'interface de visualisation
+Créez le fichier `index.php` dans le dossier `station_meteo` :
 
 ```php
 <!DOCTYPE html>
@@ -156,13 +174,27 @@ MON CODE ICI
 <head>
     <title>Station Météo</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .chart-container { margin: 20px 0; }
+    </style>
 </head>
 <body>
-    <h1>Données de la Station Météo</h1>
-    <canvas id="temperatureChart"></canvas>
+    <div class="container">
+        <h1>Données de la Station Météo</h1>
+        
+        <div class="chart-container">
+            <h2>Température</h2>
+            <canvas id="temperatureChart"></canvas>
+        </div>
+        
+        <div class="chart-container">
+            <h2>Humidité</h2>
+            <canvas id="humidityChart"></canvas>
+        </div>
+    </div>
     
     <?php
-    // Connexion à la base de données
     $servername = "localhost";
     $username = "root";
     $password = "";
@@ -174,8 +206,10 @@ MON CODE ICI
         die("Connection failed: " . $conn->connect_error);
     }
 
-    // Récupération des dernières données
-    $sql = "SELECT * FROM mesures ORDER BY timestamp DESC LIMIT 10";
+    $sql = "SELECT timestamp, temperature, humidity 
+            FROM mesures 
+            ORDER BY timestamp DESC 
+            LIMIT 20";
     $result = $conn->query($sql);
 
     $data = array();
@@ -185,31 +219,70 @@ MON CODE ICI
         }
     }
     $conn->close();
+    
+    // Inverser les données pour l'affichage chronologique
+    $data = array_reverse($data);
     ?>
 
     <script>
-    var ctx = document.getElementById('temperatureChart').getContext('2d');
-    var chart = new Chart(ctx, {
+    // Données pour les graphiques
+    const timestamps = <?php echo json_encode(array_column($data, 'timestamp')); ?>;
+    const temperatures = <?php echo json_encode(array_column($data, 'temperature')); ?>;
+    const humidities = <?php echo json_encode(array_column($data, 'humidity')); ?>;
+
+    // Configuration commune des graphiques
+    const commonOptions = {
+        responsive: true,
+        scales: {
+            y: { beginAtZero: false },
+            x: { ticks: { maxRotation: 45, minRotation: 45 } }
+        }
+    };
+
+    // Graphique de température
+    new Chart(document.getElementById('temperatureChart'), {
         type: 'line',
         data: {
-            labels: <?php echo json_encode(array_column(array_reverse($data), 'timestamp')); ?>,
+            labels: timestamps,
             datasets: [{
                 label: 'Température (°C)',
-                data: <?php echo json_encode(array_column(array_reverse($data), 'temperature')); ?>,
+                data: temperatures,
                 borderColor: 'rgb(255, 99, 132)',
                 tension: 0.1
             }]
         },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
+        options: commonOptions
+    });
+
+    // Graphique d'humidité
+    new Chart(document.getElementById('humidityChart'), {
+        type: 'line',
+        data: {
+            labels: timestamps,
+            datasets: [{
+                label: 'Humidité (%)',
+                data: humidities,
+                borderColor: 'rgb(54, 162, 235)',
+                tension: 0.1
+            }]
+        },
+        options: commonOptions
     });
     </script>
 </body>
 </html>
 ```
+
+## 7. Test de l'interface
+1. Accédez à `http://localhost/station_meteo/` dans votre navigateur
+2. Pour générer des données de test, exécutez plusieurs fois la commande d'envoi :
+```bash
+php simulator.php | curl -X POST -H "Content-Type: application/json" -d @- http://localhost/station_meteo/receive_data.php
+```
+
+## Extensions possibles
+- Ajout d'un script pour envoyer automatiquement des données toutes les X secondes
+- Création de graphiques supplémentaires pour la pression et la luminosité
+- Ajout de statistiques (moyennes, min/max, etc.)
+- Mise en place de filtres par période
+- Ajout d'alertes si certains seuils sont dépassés
